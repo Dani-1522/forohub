@@ -11,7 +11,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
-@RestController("/topicos")
+@RestController
+@RequestMapping("/topicos")
 public class TopicoController {
 
     @Autowired
@@ -19,7 +20,7 @@ public class TopicoController {
 
     public ResponseEntity<?> resgitroTopico(@RequestBody @Valid Topico topico) {
         if (topicoRepository.existsByTituloAndMensaje(topico.getTitulo(), topico.getMensaje())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("El topico ya existe");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("El tópico ya está registrado con ese título y mensaje");
         }
         Topico nuevoTopico = topicoRepository.save(topico);
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevoTopico);

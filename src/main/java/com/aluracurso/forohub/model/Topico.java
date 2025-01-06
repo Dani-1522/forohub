@@ -1,9 +1,6 @@
 package com.aluracurso.forohub.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 
 import java.time.LocalDateTime;
@@ -28,7 +25,8 @@ public class Topico {
 
     private LocalDateTime fechaCreacion = LocalDateTime.now();
 
-    private String status = "ABIERTO";
+    @Enumerated(EnumType.STRING)
+    private Status status = Status.ABIERTO;
 
     public String getTitulo() {
         return titulo;
@@ -74,15 +72,16 @@ public class Topico {
         return fechaCreacion;
     }
 
-    public void setFechaCreacion(LocalDateTime fechaCreacion) {
-        this.fechaCreacion = fechaCreacion;
+    @PrePersist
+    public void setFechaCreacion() {
+        this.fechaCreacion = LocalDateTime.now();
     }
 
-    public String getStatus() {
+    public Status getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(Status status) {
         this.status = status;
     }
 }

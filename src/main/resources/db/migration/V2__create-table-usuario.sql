@@ -1,0 +1,8 @@
+CREATE TABLE usuarios (
+    id BIGNIT NOT NULL AUTO_INCREMENT,
+    nombre VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE ,
+    contraseña VARCHAR(300) NOT NULL,
+
+    PRIMARY KEY (id)
+);

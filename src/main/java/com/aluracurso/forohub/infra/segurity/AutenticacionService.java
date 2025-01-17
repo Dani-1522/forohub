@@ -1,6 +1,7 @@
-package com.aluracurso.forohub.segurity;
+package com.aluracurso.forohub.infra.segurity;
 
-import com.aluracurso.forohub.usuario.UsuarioRepository;
+import com.aluracurso.forohub.domain.usuario.UsuarioRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -10,14 +11,11 @@ import org.springframework.stereotype.Service;
 public class AutenticacionService implements UserDetailsService {
 
     @Autowired
-    private final UsuarioRepository usuarioRepository;
+    private  UsuarioRepository usuarioRepository;
 
-    public AutenticacionService(UsuarioRepository usuarioRepository) {
-        this.usuarioRepository = usuarioRepository;
-    }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return usuarioRepository.findByLogin(username);
+        return usuarioRepository.findByNombre(username);
     }
 }

@@ -1,15 +1,22 @@
 package com.aluracurso.forohub.controller;
 
-import com.aluracurso.forohub.model.Topico;
-import com.aluracurso.forohub.repository.TopicoRepository;
+import com.aluracurso.forohub.domain.topico.Topico;
+import com.aluracurso.forohub.domain.topico.TopicoRepository;
+import com.aluracurso.forohub.domain.topico.dto.DatosActualizarTopico;
+import com.aluracurso.forohub.domain.topico.dto.DatosListadoTopico;
+import com.aluracurso.forohub.domain.topico.dto.DatosRegistroTopico;
+import com.aluracurso.forohub.domain.topico.dto.DatosRespuestaTopico;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.Optional;
+import java.net.URI;
 
 @RestController
 @RequestMapping("/topicos")
@@ -18,50 +25,44 @@ public class TopicoController {
     @Autowired
     private TopicoRepository topicoRepository;
 
-    public ResponseEntity<?> resgitroTopico(@RequestBody @Valid Topico topico) {
-        if (topicoRepository.existsByTituloAndMensaje(topico.getTitulo(), topico.getMensaje())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("El tópico ya está registrado con ese título y mensaje");
-        }
-        Topico nuevoTopico = topicoRepository.save(topico);
-        return ResponseEntity.status(HttpStatus.CREATED).body(nuevoTopico);
+    @PostMapping
+    @Transactional
+    public ResponseEntity<DatosRespuestaTopico> resgitrarTopico(@RequestBody @Valid DatosRegistroTopico datosRegistroTopico,
+                                                                UriComponentsBuilder uriBuilder) {
+        Topico topico = topicoRepository.save(new Topico(datosRegistroTopico));
+        DatosRespuestaTopico datosRespuestaTopico = new DatosRespuestaTopico(topico);
+        URI uri = uriBuilder.path("/topicos/{id}").buildAndExpand(topico.getId()).toUri();
+        return ResponseEntity.created(uri).body(datosRespuestaTopico);
     }
 
     @GetMapping
-    public ResponseEntity<?> listarTopicos() {
-        return ResponseEntity.ok(topicoRepository.findAll());
+    public ResponseEntity<Page<DatosListadoTopico>> listarTopicos(@PageableDefault(size = 5) Pageable paginacion){
+        return ResponseEntity.ok(topicoRepository.findAll(paginacion).map(DatosListadoTopico :: new));
     }
+
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> obtenerDetallesTopico(@PathVariable Long id) {
-        Optional<Topico> topico = topicoRepository.findById(id);
-        if (topico.isPresent()) {
-            return ResponseEntity.ok(topico.get());
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Topico no encontrado");
+    public ResponseEntity<DatosRespuestaTopico> listarUnTopicos(@PathVariable Long id) {
+        Topico topico = topicoRepository.getReferenceById(id);
+        DatosRespuestaTopico datosRespuestaTopico = new DatosRespuestaTopico(topico);
+        return ResponseEntity.ok(datosRespuestaTopico);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<?> actualizarTopico(@PathVariable Long id, @RequestBody @Valid Topico topicoActualizado) {
-        Optional<Topico> topicoExistete = topicoRepository.findById(id);
-        if (topicoExistete.isPresent()) {
-            Topico topico = topicoExistete.get();
-            topico.setTitulo(topicoActualizado.getTitulo());
-            topico.setMensaje(topicoActualizado.getMensaje());
-            topico.setAutor(topicoActualizado.getAutor());
-            topico.setCurso(topicoActualizado.getCurso());
-            topicoRepository.save(topico);
-            return ResponseEntity.ok(topico);
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Topico no encontrado");
+    @PutMapping
+    @Transactional
+    public ResponseEntity actualizarTopico(@RequestBody @Valid DatosActualizarTopico datosActualizarTopico) {
+        Topico topico = topicoRepository.getReferenceById(datosActualizarTopico.id());
+        topico.actualizarDatos(datosActualizarTopico);
+        DatosRespuestaTopico datosRespuestaTopico = new DatosRespuestaTopico(topico);
+        return ResponseEntity.ok(datosRespuestaTopico);
     }
 
     @DeleteMapping("/{id}")
+    @Transactional
     public ResponseEntity<?> eliminarTopico(@PathVariable Long id) {
-        if (topicoRepository.existsById(id)) {
-            topicoRepository.deleteById(id);
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Topico no encontrado");
+        topicoRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
+
 }
 
